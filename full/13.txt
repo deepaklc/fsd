@@ -22,43 +22,44 @@ Models.py
 from django.db import models
 # Create your models here.
 class Course(models.Model):
-course_code=models.CharField(max_length=40)
-course_name=models.CharField(max_length=100)
-course_credits=models.IntegerField()
-def __str__(self):
-return self.course_name
+  course_code=models.CharField(max_length=40)
+  course_name=models.CharField(max_length=100)
+  course_credits=models.IntegerField()
+	def __str__(self):
+		return self.course_name
 class Student(models.Model):
-student_usn=models.CharField(max_length=20)
-student_name=models.CharField(max_length=100)
-student_sem=models.IntegerField()
-enrolment=models.ManyToManyField(Course)
-def __str__(self):
-return self.student_name+"("+self.student_usn+")"
+	student_usn=models.CharField(max_length=20)
+	student_name=models.CharField(max_length=100)
+	student_sem=models.IntegerField()
+	enrolment=models.ManyToManyField(Course)
+	def __str__(self):
+		return self.student_name+"("+self.student_usn+")"
 
 admin.py
 from django.contrib import admin
 from .models import Student, Course
 admin.site.register(Student)
 admin.site.register(Course)
+
 views.py
 from django.http import HttpResponse
 from django.shortcuts import render
 from myapp.models import Course, Student
 def course_search_ajax(request):
-if request.method=="POST":
-cid=request.POST.get("cname")
-s=Student.objects.all()
-student_list=list()
-for student in s:
-if student.enrolment.filter(id=cid):
-student_list.append(student)
-if len(student_list)==0:
-return HttpResponse("<h1>No Students enrolled</h1>")
-return
+	if request.method=="POST":
+		cid=request.POST.get("cname")
+		s=Student.objects.all()
+		student_list=list()
+		for student in s:
+			if student.enrolment.filter(id=cid):
+				student_list.append(student)
+		if len(student_list)==0:
+			return HttpResponse("<h1>No Students enrolled</h1>")
+		return
 render(request,"selected_students.html",{"student_list":student_list})
-else:
-courses=Course.objects.all()
-return render(request,"course_search_aj.html",{"courses":courses})
+	else:
+		courses=Course.objects.all()
+		return render(request,"course_search_aj.html",{"courses":courses})
 
 D:\FSD_lab_2024\lab13\myapp\templates\course_search_aj.html
 <html>
