@@ -1,0 +1,80 @@
+11. Develop example Django app that performs CSV and PDF generation for any models
+created in previous laboratory component.
+
+Urls.py – project level
+from django.contrib import admin
+from django.urls import path,include
+urlpatterns = [
+path('admin/', admin.site.urls),
+path('',include('myapp.urls'))
+]
+
+Urls.py App level
+from django.contrib import admin
+from django.urls import path, re_path
+from myapp.views import construct_csv_from_model, construct_pdf_from_model
+urlpatterns = [
+path('construct_csv_from_model/', construct_csv_from_model),
+path('construct_pdf_from_model/', construct_pdf_from_model),
+]
+Models.py
+from django.db import models
+# Create your models here.
+class Course(models.Model):
+	course_code=models.CharField(max_length=40)
+	course_name=models.CharField(max_length=100)
+	course_credits=models.IntegerField(blank=True, null=True)
+	def __str__(self):
+		return self.course_name
+admin.py
+from django.contrib import admin
+from .models import Course
+
+admin.site.register(Course)
+
+views.py
+
+from django.shortcuts import render
+# Create your views here.
+from django.http import HttpResponse
+from django.shortcuts import render
+from myapp.models import Course
+import csv
+from reportlab.pdfgen import canvas
+def construct_csv_from_model(request):
+courses=Course.objects.all()
+response=HttpResponse(content_type="text/csv")
+response['Content-Disposition'] =
+'attachment; filename="courses_data.csv"'
+writer=csv.writer(response)
+writer.writerow(["Course Name","Course Code","Credits"])
+for course in courses:
+writer.writerow([course.course_name,course.course_code,course.course_c
+redits])
+return response
+
+def construct_pdf_from_model(request):
+courses=Course.objects.all()
+response=HttpResponse(content_type="application/pdf")
+response['Content-Disposition'] = 'attachment;
+filename="courses_data.pdf"'
+c=canvas.Canvas(response)
+c.drawString(70,720, "Course Name")
+c.drawString(170,720,"Course Code")
+c.drawString(270,720,"Credits")
+y=660
+for course in courses:
+c.drawString(70,y,course.course_name)
+c.drawString(170,y,course.course_code)
+c.drawString(270,y,str(course.course_credits))
+y=y-60
+c.showPage()
+c.save()
+return response
+
+>pip install reportlab
+>python manage.py makemigrations
+>python manage.py migrate
+>python manage.py createsuperuser
+//enter 2-3 course name in the model through admin interface
+>python manage.py runserver

@@ -1,0 +1,103 @@
+10. For students enrolment developed in Module 2, create a generic class view which displays
+list of students and detailview that displays student details for any selected student in the list.
+Urls.py project level
+from django.contrib import admin
+from django.urls import path, include
+urlpatterns = [
+path('admin/', admin.site.urls),
+path('courses/', include('courses.urls')),
+]
+Urls.py app level
+from django.urls import path
+from . import views
+urlpatterns = [
+path('students/', views.StudentListView.as_view(), name='student_list'),
+path('student/<int:pk>/', views.StudentDetailView.as_view(),
+name='student_detail'),
+]
+
+Models.py
+
+from django.db import models
+class Course(models.Model):
+name = models.CharField(max_length=100)
+def __str__(self):
+return self.name
+class Student(models.Model):
+name = models.CharField(max_length=100)
+courses = models.ManyToManyField(Course, related_name='students')
+def __str__(self):
+return self.name
+
+views.py
+from django.views.generic import ListView, DetailView
+from .models import Student
+class StudentListView(ListView):
+model = Student
+template_name = 'courses/student_list.html'
+context_object_name = 'students'
+class StudentDetailView(DetailView):
+model = Student
+template_name = 'courses/student_detail.html'
+context_object_name = 'student'
+
+D:\FSD_lab_2024\classviewstudent_registration\courses\templates\courses\student_detail.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ student.name }} Details</title>
+</head>
+<body>
+<h1>{{ student.name }} Details</h1>
+<h2>Courses enrolled:</h2>
+<ul>
+{% for course in student.courses.all %}
+<li>{{ course.name }}</li>
+{% endfor %}
+</ul>
+</body>
+</html>
+
+D:\FSD_lab_2024\classviewstudent_registration\courses\templates\courses\student_list.html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Student List</title>
+</head>
+<body>
+<h1>List of Students</h1>
+<ul>
+{% for student in students %}
+<li><a href="{% url 'student_detail' student.pk %}">{{
+
+student.name }}</a></li>
+{% endfor %}
+</ul>
+</body>
+</html>
+
+python manage.py makemigrations(under settings.py put courses in installed apps section)
+python manage.py migrate
+
+python manage.py shell
+
+# Example script to populate data
+from courses.models import Course, Student
+
+# Create courses
+course1 = Course.objects.create(name='Mathematics')
+course2 = Course.objects.create(name='Physics')
+
+# Create students
+student1 = Student.objects.create(name='Alice')
+student1.courses.add(course1) # Enroll student1 in course1
+
+student2 = Student.objects.create(name='Bob')
+student2.courses.add(course2) # Enroll student2 in course2
+
+python manage.py runserver
+
+http://127.0.0.1:8000/courses/students/

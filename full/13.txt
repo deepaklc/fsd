@@ -1,0 +1,132 @@
+13. Develop a search application in Django using AJAX that displays courses enrolled by a
+student being searched
+
+Register your model in seetings.py
+Ursl.py – project level
+from django.contrib import admin
+from django.urls import path,include
+urlpatterns = [
+path('admin/', admin.site.urls),
+path('',include('myapp.urls'))
+]
+
+Urls.py – App level
+from django.contrib import admin
+from django.urls import path, re_path
+from .views import course_search_ajax
+urlpatterns = [
+path('course_search_ajax/', course_search_ajax),
+]
+
+Models.py
+from django.db import models
+# Create your models here.
+class Course(models.Model):
+course_code=models.CharField(max_length=40)
+course_name=models.CharField(max_length=100)
+course_credits=models.IntegerField()
+def __str__(self):
+return self.course_name
+class Student(models.Model):
+student_usn=models.CharField(max_length=20)
+student_name=models.CharField(max_length=100)
+student_sem=models.IntegerField()
+enrolment=models.ManyToManyField(Course)
+def __str__(self):
+return self.student_name+"("+self.student_usn+")"
+
+admin.py
+from django.contrib import admin
+from .models import Student, Course
+admin.site.register(Student)
+admin.site.register(Course)
+views.py
+from django.http import HttpResponse
+from django.shortcuts import render
+from myapp.models import Course, Student
+def course_search_ajax(request):
+if request.method=="POST":
+cid=request.POST.get("cname")
+s=Student.objects.all()
+student_list=list()
+for student in s:
+if student.enrolment.filter(id=cid):
+student_list.append(student)
+if len(student_list)==0:
+return HttpResponse("<h1>No Students enrolled</h1>")
+return
+render(request,"selected_students.html",{"student_list":student_list})
+else:
+courses=Course.objects.all()
+return render(request,"course_search_aj.html",{"courses":courses})
+
+D:\FSD_lab_2024\lab13\myapp\templates\course_search_aj.html
+<html>
+<body>
+<form method="POST" action="">
+Courses
+{% csrf_token %}
+<select name="cname" id="cname">
+{%for course in courses %}
+<option value="{{course.id}}">{{course.course_name}}</option>
+{% endfor %}
+</select>
+<input type="button" value="Search" id="serbtn">
+<span id="result"></span>
+</form>
+
+</body>
+<script
+src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></scrip
+t>
+<script>
+$(document).ready(function(){
+$("#serbtn").click(function(){
+var cname = $("#cname").val();
+$.ajax({
+url: "/course_search_ajax/",
+type: "POST",
+data: {cname:cname,csrfmiddlewaretoken:"{{csrf_token }}"},
+success: function(response){
+$("#result").html(response);
+}
+});
+} );
+});
+</script>
+</html>
+
+D:\FSD_lab_2024\lab13\myapp\templates\selected_students.html
+<html>
+<style type="text/css">
+#i1 {background-color: lightgreen;color:brown;display:table}
+#i2 {background-color: black;color:yellow}
+</style>
+<body>
+<h1 id="i1">Student Names</h1>
+<table>
+<tr>
+<th>Student Name</th>
+<th>Student USN</th>
+<th>student Course</th>
+</tr>
+{% for s in student_list %}
+<tr>
+<td> {{ s.student_name }} </td>
+
+<td> {{ s.student_usn }} </td>
+
+<td> {{ s.student_sem }} </td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html
+
+>python manage.py makemigrations
+>python manage.py migrate
+>python manage.py createsuperuser
+Add data to Course model
+Add data to Student model
+
+>python manage.py runserver
