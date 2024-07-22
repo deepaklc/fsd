@@ -67,9 +67,9 @@ def construct_pdf_from_model(request):
 		c.drawString(170,y,course.course_code)
 		c.drawString(270,y,str(course.course_credits))
 		y=y-60
-		c.showPage()
-		c.save()
-		return response
+	c.showPage()
+	c.save()
+	return response
 
 >pip install reportlab
 >python manage.py makemigrations
